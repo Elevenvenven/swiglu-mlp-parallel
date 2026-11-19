@@ -39,6 +39,11 @@ same thing with warnings enabled; the bare `g++` line is the course's
 "self-contained, no external library" requirement, and it is what must keep
 working.
 
+`bash scripts/run_all.sh` does the whole chain in one command (build, `ctest`,
+token sweep, `results/baseline_<host>.csv`, figure); `uv run --with matplotlib
+python3 tools/plot_baseline.py` regenerates `results/baseline_curve.png` from
+whatever CSVs are in `results/`.
+
 On Miyabi the same two steps are wrapped by
 `scripts/miyabi/run_baseline_{c,g}.pbs`, or run from a notebook:
 `notebooks/miyabi_baseline.ipynb` writes these sources on the Miyabi login node
@@ -81,6 +86,11 @@ exist to prove without shipping matrices around.
 Environment capture: `results/env_miyabi-g.txt` (module list, compiler
 versions, `uname`, `/proc/cpuinfo`).
 
+`results/baseline_MacBookAir-2.csv` is a sanity line, not a comparison point:
+on that laptop the same binary measured 6.19 GFLOP/s at 16 tokens in one
+session and 3.05 GFLOP/s in another, which is core placement / power state, not
+code. Only Miyabi numbers are quoted as results.
+
 ### Where the time goes
 
 For 16 tokens the layer touches 138 MB of weights (2.21 GB if the weights are
@@ -111,7 +121,10 @@ SiLU ゲートを C++ で実装し、**単一スレッドの baseline** を確�
 
 ### ビルドと実行
 
-上記 English 節と同じ 3 コマンド。Miyabi 上では
+上記 English 節と同じ 3 コマンド。`bash scripts/run_all.sh` はビルド → `ctest`
+→ トークンスイープ → `results/baseline_<host>.csv` → 図までを 1 コマンドで行い、
+`uv run --with matplotlib python3 tools/plot_baseline.py` は `results/` にある
+CSV から `results/baseline_curve.png` を作り直す。Miyabi 上では
 `scripts/miyabi/run_baseline_{c,g}.pbs` を `qsub` するか、ノートブック
 `notebooks/miyabi_baseline.ipynb` を使う（Miyabi のログインノードにこれらの
 ソースを `%%writefile` で書き、`%%sub` でスイープを投入する）。ノートブックは
@@ -143,6 +156,11 @@ SiLU ゲートを C++ で実装し、**単一スレッドの baseline** を確�
 
 環境の記録: `results/env_miyabi-g.txt`（module list、コンパイラ版、`uname`、
 `/proc/cpuinfo`）。
+
+`results/baseline_MacBookAir-2.csv` は健全性確認用で、比較対象ではない。同じ
+バイナリが 16 トークンで 6.19 GFLOP/s のときも 3.05 GFLOP/s のときもあり、
+これはコードではなくコア配置／電力状態の差。結果として引用するのは Miyabi の
+数値だけ。
 
 ### 時間はどこで消えているか
 
