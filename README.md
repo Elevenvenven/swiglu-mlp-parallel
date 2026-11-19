@@ -73,9 +73,17 @@ Two things to read off this table:
   GFLOP/s is flat at 14–18. The kernel is therefore limited by how fast one
   core issues FMAs, not by the token count.
 - **The compiler dominates on Grace.** The same sources built with g++ 11.4.1
-  (`-O3 -march=native`) give 275.8 ms / 4.02 GFLOP/s at 16 tokens on the login
-  node `miyabi-g3`; nvc++ is 4.4× faster because it vectorizes the
+  (`-O3 -mcpu=native`) give 283.3 ms / 3.91 GFLOP/s at 16 tokens on the compute
+  node `mg0028` (`results/baseline_mg0028_g++.csv`), and 275.8 ms / 4.02 on the
+  login node `miyabi-g3`: nvc++ is ~4.5× faster because it vectorizes the
   gather/scatter form of the per-channel dot products that gcc leaves scalar.
+  Selecting the compiler on Miyabi needs `qsub -v TOOLCHAIN=g++`, not
+  `-v CXX=g++` (see `docs/miyabi.md`).
+
+The run is reproducible across nodes: three separate nvc++ jobs gave 17.90
+(`mg0030`), 17.82 (`mg0039`) and 17.72 (`mg0044`) GFLOP/s at 16 tokens, i.e.
+within 1%. The 1-token row does move more (14.1–17.3) because it is dominated
+by first-touch/warm-up state rather than by the kernel.
 
 Cross-machine check: `checksum` for 16 tokens is `23.8034274` and `abs_sum`
 `2112.68559` on `mg0030`, versus `23.8034219` / `2112.68556` for g++ on an Apple
@@ -145,10 +153,15 @@ CSV から `results/baseline_curve.png` を作り直す。Miyabi 上では
 - **時間はトークン数にちょうど比例する**（1 トークン 4.9 ms → 128 トークン
   495 ms）。GFLOP/s が 14〜18 で平坦なので、1 コアの FMA 発行速度が律速。
 - **Grace ではコンパイラの差が大きい。** 同じソースを g++ 11.4.1
-  （`-O3 -march=native`）でビルドすると 16 トークンで 275.8 ms / 4.02 GFLOP/s
-  （ログインノード `miyabi-g3`）。nvc++ が 4.4 倍速いのは、チャネルごとの
-  内積（gather/scatter 形）を gcc がスカラのままにするのに対し、nvc++ が
-  ベクトル化するため。
+  （`-O3 -mcpu=native`）でビルドすると 16 トークンで 283.3 ms / 3.91 GFLOP/s
+  （計算ノード `mg0028`、`results/baseline_mg0028_g++.csv`）、ログインノード
+  `miyabi-g3` では 275.8 ms / 4.02 GFLOP/s。nvc++ が約 4.5 倍速いのは、
+  チャネルごとの内積（gather/scatter 形）を gcc がスカラのままにするのに対し、
+  nvc++ がベクトル化するため。Miyabi でコンパイラを切り替えるときは
+  `qsub -v TOOLCHAIN=g++`（`-v CXX=g++` は効かない。`docs/miyabi.md` 参照）。
+- ノード間の再現性: nvc++ の 3 ジョブは 16 トークンで 17.90（`mg0030`）/
+  17.82（`mg0039`）/ 17.72（`mg0044`）GFLOP/s と 1% 以内。1 トークンの行だけは
+  14.1〜17.3 と動くが、これはカーネルではなく初回タッチ／warm-up の状態。
 - 機械をまたいだ照合: 16 トークンの `checksum` は `mg0030` で `23.8034274`、
   M5 の g++ で `23.8034219`（`abs_sum` は `2112.68559` / `2112.68556`）。
   コンパイラもベクトル化も加算順も違うのに 6 桁一致するのが、行列を運ばずに
