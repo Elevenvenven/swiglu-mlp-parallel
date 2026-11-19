@@ -103,7 +103,12 @@ nvc/nvc++ の絶対パスで先に export している**（module load 前から
 そのため `qsub -v CXX=g++` は無視されて nvc++ でビルドされる（実測: 2 回とも
 nvc++ になった）。`scripts/miyabi/env_g.sh` は `TOOLCHAIN` を見て CC/CXX を
 決めるので、`qsub -q lecture-g -v TOOLCHAIN=g++ scripts/miyabi/run_baseline_g.pbs`
-の形で切り替えること。CMake 側も、GCC 11 が aarch64 の `-march=neoverse-v2` を
+の形で切り替えること。`-v TOOLCHAIN=g++` が効いていないように見えたら、まず
+`grep -c TOOLCHAIN scripts/miyabi/env_g.sh` で Miyabi 側のコピーが最新か確認する。
+旧スクリプトのままだと `TOOLCHAIN` を知らないので nvc++ のまま走る（実測で
+つまずいた箇所）。なお `rsync -az scripts/ ... miyabig:repo/` のようにディレクトリを
+複数ソースに混ぜると、`scripts/` の中身がリポジトリ直下に展開されるので、
+`rsync -az --exclude .git --exclude build ./ miyabig:swiglu-mlp-parallel/` を使う。CMake 側も、GCC 11 が aarch64 の `-march=neoverse-v2` を
 知らないので、aarch64 では `-mcpu=native` を使っている（`CMakeLists.txt`）。
 
 鍵がまだ通らない場合の確認順:

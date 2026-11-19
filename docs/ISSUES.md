@@ -91,6 +91,8 @@ Gotchas found while doing this
   any module load, so `qsub -v CXX=g++` is silently ignored (the job ran nvc++
   twice). Compiler selection therefore goes through `TOOLCHAIN`
   (`qsub -v TOOLCHAIN=g++`), which `scripts/miyabi/env_g.sh` maps to CC/CXX.
+  Two attempts "lost" the variable because the checkout on Miyabi was stale
+  (`grep -c TOOLCHAIN scripts/miyabi/env_g.sh` = 0); check that first.
 - The default module set on a fresh Miyabi-G login is `nvidia/25.9(default)` +
   `nv-hpcx/25.9`, not the 25.3 that `scripts/miyabi/env_g.sh` used to pin.
 - `qstat -Q` is not supported by this PBS (2024.1.5); use `qstat --limit` for
