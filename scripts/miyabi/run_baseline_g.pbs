@@ -1,0 +1,41 @@
+#!/bin/bash
+#PBS -q lecture1-g
+#PBS -l select=1:mpiprocs=1
+#PBS -l walltime=00:14:00
+#PBS -W group_list=gt81
+#PBS -j oe
+
+# Single-threaded SwiGLU baseline on one Miyabi-G (Grace) core.
+#
+#   cd <your checkout> && qsub -q lecture-g scripts/miyabi/run_baseline_g.pbs
+#   # g++ instead of the default nvc++ (compiler matters a lot here: 17.9 vs
+#   # 4.0 GFLOPS at 16 tokens), override the toolchain through env_g.sh:
+#   qsub -q lecture-g -v CXX=g++,CC=gcc scripts/miyabi/run_baseline_g.pbs
+#
+# group_list=gt81 is fixed by the course ("you do not need to and should never
+# change it", pd00_intro.ipynb). Queues are lecture1-{mig,g,c} during the
+# lecture slot (Mon 16:50-18:35) and lecture-{mig,g,c} outside it; the 15 minute
+# educational walltime cap is why this asks for 14:00.
+
+cd "$PBS_O_WORKDIR" || exit 1
+source "$PBS_O_WORKDIR/scripts/miyabi/env_g.sh"
+
+exec 2>&1
+set -x
+
+mkdir -p results
+echo "=== host/compiler ==="
+hostname
+"$CXX" --version | head -2
+
+# One build tree per compiler, so switching toolchains never hits a stale
+# CMake cache: `qsub -q lecture-g -v CXX=g++ scripts/miyabi/run_baseline_g.pbs`
+# and the nvc++ run coexist on the same checkout.
+BUILD_DIR=${BUILD_DIR:-build/$(basename "$CXX")}
+cmake -B "$BUILD_DIR" -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+      -DCMAKE_CXX_COMPILER="$CXX" || exit 1
+cmake --build "$BUILD_DIR" -j || exit 1
+ctest --test-dir "$BUILD_DIR" --output-on-failure || exit 1
+
+BUILD="$BUILD_DIR" REPEAT=${REPEAT:-20} scripts/run_baseline.sh \
+  | tee "results/baseline_$(hostname -s)_$(basename "$CXX").csv"

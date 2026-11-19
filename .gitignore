@@ -1,0 +1,7 @@
+build/
+.cache/
+compile_commands.json
+.DS_Store
+course/
+# results/ is committed on purpose: the CSVs are the measurements the README
+# quotes, and results/baseline_curve.png is regenerated from them.

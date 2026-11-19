@@ -1,0 +1,4 @@
+impl,host,compiler,tokens,d_model,d_ff,repeat,median_ms,min_ms,gflops
+serial,MacBookAir-2,clang++,1,2048,5632,20,11.1868,11.1527,6.19
+serial,MacBookAir-2,clang++,16,2048,5632,20,178.7919,178.6696,6.19
+serial,MacBookAir-2,clang++,128,2048,5632,20,1432.9627,1430.5797,6.18
