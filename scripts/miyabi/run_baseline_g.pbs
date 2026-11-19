@@ -10,7 +10,7 @@
 #   cd <your checkout> && qsub -q lecture-g scripts/miyabi/run_baseline_g.pbs
 #   # g++ instead of the default nvc++ (compiler matters a lot here: 17.9 vs
 #   # 4.0 GFLOPS at 16 tokens), override the toolchain through env_g.sh:
-#   qsub -q lecture-g -v CXX=g++,CC=gcc scripts/miyabi/run_baseline_g.pbs
+#   qsub -q lecture-g -v TOOLCHAIN=g++ scripts/miyabi/run_baseline_g.pbs
 #
 # group_list=gt81 is fixed by the course ("you do not need to and should never
 # change it", pd00_intro.ipynb). Queues are lecture1-{mig,g,c} during the
@@ -29,8 +29,8 @@ hostname
 "$CXX" --version | head -2
 
 # One build tree per compiler, so switching toolchains never hits a stale
-# CMake cache: `qsub -q lecture-g -v CXX=g++ scripts/miyabi/run_baseline_g.pbs`
-# and the nvc++ run coexist on the same checkout.
+# CMake cache: the nvc++ row and the g++ row (`qsub -v TOOLCHAIN=g++`)
+# coexist on the same checkout.
 BUILD_DIR=${BUILD_DIR:-build/$(basename "$CXX")}
 cmake -B "$BUILD_DIR" -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo \
       -DCMAKE_CXX_COMPILER="$CXX" || exit 1

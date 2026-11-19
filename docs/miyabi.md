@@ -98,6 +98,14 @@ Miyabi は **2 要素認証を keyboard-interactive で要求する**（実測: 
   コマンドが通る（`ssh -o BatchMode=yes miyabig hostname` で確認できる）
 - 6 時間でソケットが切れたら、また一度だけ対話ログインする
 
+ジョブにコンパイラを渡すときの注意: サイトの環境が **`CC`/`CXX` を
+nvc/nvc++ の絶対パスで先に export している**（module load 前から既に設定済み）。
+そのため `qsub -v CXX=g++` は無視されて nvc++ でビルドされる（実測: 2 回とも
+nvc++ になった）。`scripts/miyabi/env_g.sh` は `TOOLCHAIN` を見て CC/CXX を
+決めるので、`qsub -q lecture-g -v TOOLCHAIN=g++ scripts/miyabi/run_baseline_g.pbs`
+の形で切り替えること。CMake 側も、GCC 11 が aarch64 の `-march=neoverse-v2` を
+知らないので、aarch64 では `-mcpu=native` を使っている（`CMakeLists.txt`）。
+
 鍵がまだ通らない場合の確認順:
 
 1. 公開鍵 `~/.ssh/miyabi/ed25519.pub`（`SHA256:J+gtLmDv0bxaZOwid1q8VOGu9jOzX4JiqFi/ZPNcBgI`）

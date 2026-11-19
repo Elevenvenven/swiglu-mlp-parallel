@@ -6,5 +6,12 @@
 module purge
 module load intel/2025.0.0
 
-export CC=icx
-export CXX=icpx
+# Same rule as env_g.sh: pick the compiler through TOOLCHAIN, never through
+# $CC/$CXX, because the site environment pre-sets those.
+TOOLCHAIN=${TOOLCHAIN:-intel}
+case "$TOOLCHAIN" in
+  intel)     CC=icx;  CXX=icpx ;;
+  g++|gcc)   CC=gcc;  CXX=g++  ;;
+  *) echo "unknown TOOLCHAIN=$TOOLCHAIN (want intel or g++)" >&2; return 1 2>/dev/null || exit 1 ;;
+esac
+export CC CXX

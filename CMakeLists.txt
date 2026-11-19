@@ -21,7 +21,13 @@ add_compile_options(-O3 -Wall -Wextra -Wno-unused-parameter)
 if(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
   add_compile_options(-xHost)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  add_compile_options(-march=native)
+  # GCC 11 (the Miyabi-G system compiler) does not know aarch64 -march=neoverse-v2,
+  # so native tuning on that partition has to go through -mcpu.
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+    add_compile_options(-mcpu=native)
+  else()
+    add_compile_options(-march=native)
+  endif()
 endif()
 
 # One binary, one main(): the submission is compiled as a whole, so the

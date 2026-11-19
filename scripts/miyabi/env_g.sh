@@ -12,6 +12,13 @@
 module purge
 module load nvidia/25.9 nv-hpcx/25.9
 
-# Overridable so the same script drives a g++ run: `CXX=g++ CC=gcc qsub ...`
-export CC=${CC:-nvc}
-export CXX=${CXX:-nvc++}
+# TOOLCHAIN selects the compiler, not $CXX: the site environment already exports
+# CC/CXX as absolute nvc paths before any module load, so `qsub -v CXX=g++`
+# silently loses to it (verified on miyabi-g3). `qsub -v TOOLCHAIN=g++` works.
+TOOLCHAIN=${TOOLCHAIN:-nvc++}
+case "$TOOLCHAIN" in
+  nvc++|nvc) CC=nvc;    CXX=nvc++ ;;
+  g++|gcc)   CC=gcc;    CXX=g++ ;;
+  *) echo "unknown TOOLCHAIN=$TOOLCHAIN (want nvc++ or g++)" >&2; return 1 2>/dev/null || exit 1 ;;
+esac
+export CC CXX

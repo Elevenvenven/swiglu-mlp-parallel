@@ -77,10 +77,20 @@ Acceptance criteria
   table.
 - Depends on #2, #3, #4, and on knowing the AccountingGroup (`group_list=gt81`).
 
+Reproducibility across nodes (two independent jobs, same sources, nvc++):
+16 tokens gave 17.90 GFLOP/s on `mg0030` and 17.82 on `mg0039` (0.4% apart),
+while 1 token gave 14.14 vs 17.26 — the single-token row is dominated by
+warm-up/first-touch state and should not be quoted on its own.
+
 Gotchas found while doing this
 - `lecture-g` requests `nvnodes-g` resources; when they are exhausted the job
   sits in `Q` with `comment = Not Running: Insufficient amount of resource:
-  nvnodes-g`. Check `qstat -f <jid> | grep -E "comment|estimated.start_time"`.
+  nvnodes-g`, or `Job would conflict with reservation or top job`. Check
+  `qstat -f <jid> | grep -E "comment|estimated.start_time"`.
+- The site environment **pre-exports `CC`/`CXX`** as absolute nvc paths before
+  any module load, so `qsub -v CXX=g++` is silently ignored (the job ran nvc++
+  twice). Compiler selection therefore goes through `TOOLCHAIN`
+  (`qsub -v TOOLCHAIN=g++`), which `scripts/miyabi/env_g.sh` maps to CC/CXX.
 - The default module set on a fresh Miyabi-G login is `nvidia/25.9(default)` +
   `nv-hpcx/25.9`, not the 25.3 that `scripts/miyabi/env_g.sh` used to pin.
 - `qstat -Q` is not supported by this PBS (2024.1.5); use `qstat --limit` for
